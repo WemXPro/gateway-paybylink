@@ -95,23 +95,28 @@ class PayByLinkGateway implements PaymentGatewayInterface
      */
     public static function returnGateway(Request $request)
     {        
-        // retrieve the gateway
-        $gateway = Gateway::query()->where('driver', 'PayByLink')->firstOrFail();
+        try {
+            // retrieve the gateway
+            $gateway = Gateway::query()->where('driver', 'PayByLink')->firstOrFail();
 
-        // retrieve the payment
-        $payment = Payment::where('id', $request->control)->firstOrFail();
+            // retrieve the payment
+            $payment = Payment::where('id', $request->control)->firstOrFail();
 
-        if(!$payment) {
-            throw new \Exception('Payment not found');
+            if(!$payment) {
+                throw new \Exception('Payment not found');
+            }
+
+            // validate the webhook key
+            if($payment->data['webhookKey'] !== settings('encrypted::paybylink_webhook_key')) {
+                throw new \Exception('Invalid webhook secret key');
+            }
+
+            // complete the payment
+            $payment->completed($request->get('transactionId'));
+        } catch (\Exception $e) {
+            ErrorLog('paybylink::webhook', $e->getMessage());
+            return response()->json(['success' => false], 500);
         }
-
-        // validate the webhook key
-        if($payment->data['webhookKey'] !== settings('encrypted::paybylink_webhook_key')) {
-            throw new \Exception('Invalid webhook secret key');
-        }
-
-        // complete the payment
-        $payment->completed($request->get('transactionId'));
 
         // return 200 response
         return response()->json(['success' => true], 200);
