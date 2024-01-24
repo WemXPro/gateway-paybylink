@@ -1,10 +1,10 @@
 {
-    "name": "nwidart/examplegateway",
+    "name": "wemx/gateway-paybylink",
     "description": "",
     "authors": [
         {
-            "name": "Nicolas Widart",
-            "email": "n.widart@gmail.com"
+            "name": "Mubeen",
+            "email": "mubeen@wemx.net"
         }
     ],
     "extra": {
@@ -17,7 +17,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Modules\\ExampleGateway\\": ""
+            "Modules\\PayByLinkGateway\\": ""
         }
     }
 }

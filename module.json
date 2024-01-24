@@ -1,15 +1,15 @@
 {
-    "name": "ExampleGateway",
-    "alias": "examplegateway",
+    "name": "PayByLinkGateway",
+    "alias": "paybylink",
     "description": "",
     "keywords": [],
     "priority": 0,
     "providers": [
-        "Modules\\ExampleGateway\\Providers\\ExampleGatewayServiceProvider"
+        "Modules\\PayByLinkGateway\\Providers\\PayByLinkGatewayServiceProvider"
     ],
     "files": [],
 
 
     "type": "gateway",
-    "class": "Modules\\ExampleGateway\\Entities\\ExampleGateway"
+    "class": "Modules\\PayByLinkGateway\\Entities\\PayByLinkGateway"
 }

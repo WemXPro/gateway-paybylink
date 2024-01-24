@@ -1,21 +1,21 @@
 <?php
 
-namespace Modules\ExampleGateway\Providers;
+namespace Modules\PayByLinkGateway\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Factory;
 
-class ExampleGatewayServiceProvider extends ServiceProvider
+class PayByLinkGatewayServiceProvider extends ServiceProvider
 {
     /**
      * @var string $moduleName
      */
-    protected $moduleName = 'ExampleGateway';
+    protected $moduleName = 'PayByLinkGateway';
 
     /**
      * @var string $moduleNameLower
      */
-    protected $moduleNameLower = 'examplegateway';
+    protected $moduleNameLower = 'paybylink';
 
     /**
      * Boot the application events.
@@ -24,7 +24,7 @@ class ExampleGatewayServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $this->registerViews();
+
     }
 
     /**
