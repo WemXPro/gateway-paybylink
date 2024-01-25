@@ -51,9 +51,12 @@ class PayByLinkGateway implements PaymentGatewayInterface
             
             // Format the amount to 2 decimal places
             $amountFormatted = number_format($amount, 2, '.', '');
+
+            // define the control
+            $control = json_encode(['payment_id' => $payment->id, 'webhook_secret' => settings('encrypted::paybylink_webhook_key')]);
             
             // Concatenate the fields with the separator
-            $concatenated = "{$secretKey}|{$shopId}|{$amountFormatted}|{$payment->id}|{$payment->description}|{$payment->user->email}|{$notifyURL}|{$returnUrlSuccess}";
+            $concatenated = "{$secretKey}|{$shopId}|{$amountFormatted}|{$control}|{$payment->description}|{$payment->user->email}|{$notifyURL}|{$returnUrlSuccess}";
             
             // Generate the SHA256 hash of the concatenated string
             $signature = hash('sha256', $concatenated);
@@ -62,13 +65,13 @@ class PayByLinkGateway implements PaymentGatewayInterface
             $response = Http::post('https://secure.paybylink.pl/api/v1/transfer/generate', [
                 'shopId' => $shopId,
                 'price' => $amountFormatted, // Use the formatted amount
-                'control' => $payment->id,
+                'control' => $control,
                 'description' => $payment->description,
                 'email' => $payment->user->email,
                 'notifyURL' => $notifyURL,
                 'returnUrlSuccess' => $returnUrlSuccess,
                 'signature' => $signature,
-            ]);        
+            ]);
 
             if(!$response->successful()) {
                 throw new \Exception("Code: {$response['errorCode']} | Error: {$response['errorMessage']}");   
@@ -77,9 +80,6 @@ class PayByLinkGateway implements PaymentGatewayInterface
             if(!isset($response['url'])) {
                 throw new \Exception('Gateway did not return a payment URL');
             }
-            
-            // store the signature in the payment
-            $payment->update(['data' => ['webhookKey' => settings('encrypted::paybylink_webhook_key')]]);
             
         } catch (\Exception $e) {
            return redirect()->back()->withError($e->getMessage());
@@ -99,20 +99,24 @@ class PayByLinkGateway implements PaymentGatewayInterface
             // retrieve the gateway
             $gateway = Gateway::query()->where('driver', 'PayByLink')->firstOrFail();
 
+            // decode the control
+            $control = json_decode($request->control);
+
             // retrieve the payment
-            $payment = Payment::where('id', $request->control)->firstOrFail();
+            $payment = Payment::where('id', $control->payment_id)->firstOrFail();
 
             if(!$payment) {
                 throw new \Exception('Payment not found');
             }
 
             // validate the webhook key
-            if($payment->data['webhookKey'] !== settings('encrypted::paybylink_webhook_key')) {
+            if(settings('encrypted::paybylink_webhook_key') !== $control->webhook_secret) {
                 throw new \Exception('Invalid webhook secret key');
             }
 
             // complete the payment
             $payment->completed($request->get('transactionId'));
+
         } catch (\Exception $e) {
             ErrorLog('paybylink::webhook', $e->getMessage());
             return response()->json(['success' => false], 500);
