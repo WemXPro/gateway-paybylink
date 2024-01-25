@@ -74,7 +74,7 @@ class PayByLinkGateway implements PaymentGatewayInterface
             ]);
 
             if(!$response->successful()) {
-                throw new \Exception("Code: {$response['errorCode']} | Error: {$response['errorMessage']}");   
+                throw new \Exception("Code: {$response['errorCode']} | Error: {$response['error']}");   
             }
 
             if(!isset($response['url'])) {
