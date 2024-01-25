@@ -38,9 +38,7 @@ class PayByLinkGateway implements PaymentGatewayInterface
             $gateway = Gateway::query()->where('driver', 'PayByLink')->firstOrFail();
 
             // store a random key to later use for signature validation
-            if(!Settings::has('encrypted::paybylink_webhook_key')) {
-                Settings::put('encrypted::paybylink_webhook_key', str_random(32));
-            }
+            self::generateWebhookSecret();
 
             // define variables
             $secretKey = $gateway->config['secret_key'];
@@ -74,7 +72,7 @@ class PayByLinkGateway implements PaymentGatewayInterface
             ]);
 
             if(!$response->successful()) {
-                throw new \Exception("Code: {$response['errorCode']} | Error: {$response['error']}");   
+                throw new \Exception("Code: {$response['errorCode']} | {$response['error']}");   
             }
 
             if(!isset($response['url'])) {
@@ -123,7 +121,14 @@ class PayByLinkGateway implements PaymentGatewayInterface
         }
 
         // return 200 response
-        return response()->json(['success' => true], 200);
+        return response('OK', 200)->header('Content-Type', 'text/plain');
+    }
+
+    protected static function generateWebhookSecret(): void 
+    {
+        if(!Settings::has('encrypted::paybylink_webhook_key')) {
+            Settings::put('encrypted::paybylink_webhook_key', str_random(32));
+        }
     }
 
     /**
@@ -177,10 +182,7 @@ class PayByLinkGateway implements PaymentGatewayInterface
      */
     public static function getConfigMerge(): array
     {
-        // store a random key to later use for signature validation
-        if(!Settings::has('encrypted::paybylink_webhook_key')) {
-            Settings::put('encrypted::paybylink_webhook_key', str_random(32));
-        }
+        self::generateWebhookSecret();
 
         return [
             'shop_id' => '',
